@@ -11,7 +11,7 @@ class HACMony(object):
         for device_serial in get_available_devices():
             self.device_list.append(Device(device_serial))
     
-    def explore_for_hopping(self, device, app_path=''):
+    def explore(self, device, app_path=''):
         assert isinstance(device, Device)
         app = App(device, app_path)
         print(app.package_name)
@@ -25,6 +25,12 @@ class HACMony(object):
         # return explorer.test_explore_for_audio(hstg, service_list)
         return explorer.explore_dfs(depth, hstg, service_list)
     
+    def enhence(self, device, app_path='', app_paths = ''):
+        pass
+    
     def hop(self, source_device, target_device, app):
         return
+    
+    def detect_hac(self, app_path=''):
+        pass
 
