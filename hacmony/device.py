@@ -3,9 +3,9 @@ import sys
 import os
 import time
 import uiautomator2
-from app import App
-from adb import ADB
-from minicap import Minicap
+from .app import App
+from .adb import ADB
+from .minicap import Minicap
 from loguru import logger
 
 DEFAULT_NUM = '1234567890'
@@ -104,6 +104,7 @@ class Device(object):
             logger.warning("unsupported param " + app + " with type: ", type(app))
             return
         self.u2.app_start(package_name)
+        time.sleep(2)
 
     def stop_app(self, app):
         if isinstance(app, str):

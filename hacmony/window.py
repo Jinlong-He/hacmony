@@ -1,6 +1,3 @@
-import cv
-
-
 class Window(object):
     def __init__(self, bounds=None, img=None):
         if bounds is None:
@@ -17,10 +14,11 @@ class Window(object):
         return bounds_sim, bounds_diff
 
     def img_similarity(self, other):
+        from .cv import calculate_dhash
         if self.img_dhash == '':
-            self.img_dhash = cv.calculate_dhash(self.img)
+            self.img_dhash = calculate_dhash(self.img)
         if other.img_dhash == '':
-            other.img_dhash = cv.calculate_dhash(other.img)
+            other.img_dhash = calculate_dhash(other.img)
         distance = cv.dhash_hamming_distance(self.img_dhash, other.img_dhash)
         self_len = len(self.img_dhash)
         other_len = len(other.img_dhash)

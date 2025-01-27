@@ -1,10 +1,9 @@
 import time
 import xml.etree.ElementTree as ET
-from view import View
-from window import Window
-import cv
+from .view import View
+from .window import Window
 import cv2
-from times import Times
+from .times import Times
 
 state_num = 0
 
@@ -230,13 +229,15 @@ class HSTG(object):
             bounds_set.add(bounds)
 
         window = Window(bounds_set)
-        window.img = cv.load_image_from_buf(self.device.minicap.last_screen)
-        window.img_dhash = cv.calculate_dhash(window.img)
+        from .cv import load_image_from_buf
+        from .cv import calculate_dhash
+        window.img = load_image_from_buf(self.device.minicap.last_screen)
+        window.img_dhash = calculate_dhash(window.img)
         return views, window
 
-    def export_xml(self):
+    def export_xml(self, xlm_file_path = ''):
         service_dict = {}
-        xml_file_path = 'state/test.xml'
+        # xml_file_path = 'state/test.xml'
 
         # hstg
         root = ET.Element("HSTG")
@@ -288,3 +289,10 @@ class HSTG(object):
         print(f"service_dict count: {len(service_dict)}")
         for key, value in service_dict.items():
             print(key)
+    
+    def get_PLAYs(self):
+        # return a set of 'events sequence' which is starting from initial state to the state with 'PLAY' status.
+        pass
+
+    def import_xml(self, xlm_file_path):
+        pass

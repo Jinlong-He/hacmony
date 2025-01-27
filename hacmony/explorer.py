@@ -1,5 +1,5 @@
 import time
-from times import Times
+from .times import Times
 
 
 class Explorer(object):
@@ -10,7 +10,7 @@ class Explorer(object):
         self.u2 = device.u2
         self.package_name = self.adb.get_current_package()
     
-    def explore_dfs(self, depth, hstg, service_list=[]):
+    def explore_dfs(self, depth, hstg, service_list=[], timeout=30):
         if not service_list:
             return
         if not depth:
