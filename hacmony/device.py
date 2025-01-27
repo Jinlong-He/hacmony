@@ -162,3 +162,18 @@ class Device(object):
         if self.sdk_version is None:
             self.sdk_version = self.adb.get_sdk_version()
         return self.sdk_version
+
+    def get_device_size(self):
+        info = self.info
+        width = info['displayWidth']
+        height = info['displayHeight']
+        orientation_info = subprocess.check_output(
+            "adb shell \"dumpsys window displays|grep init=\"").strip().decode()
+        init_str = orientation_info.split(" ")[0][5:]
+        cur_str = orientation_info.split(" ")[2][4:]
+        if width > height:
+            width, height = height, width
+        if init_str == cur_str:
+            return [width, height]
+        else:
+            return [height, width]

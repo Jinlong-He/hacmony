@@ -22,6 +22,42 @@ class HACMony(object):
         return hstg
     
     def hop(self, source_device, target_device, app):
+        size = source_device.get_device_size()
+        width = size[0]
+        height = size[1]
+        print(f'source_device width*height: {width}*{height}')
+        if width < height:
+            orientation = 'port'  # 竖屏
+        else:
+            orientation = 'land'  # 横屏
+
+        source_device.press("recent")
+        time.sleep(1)
+
+        if orientation == 'port':
+            source_device.swipe(width * 0.75, height * 0.5, width * 0.25, height * 0.5)
+            time.sleep(1)
+
+        drag_from_elem = None
+        drag_from_elem_parent = source_device(resourceId="com.huawei.android.launcher:id/task_view")
+        for drag_from_elem_p in drag_from_elem_parent:
+            if app in drag_from_elem_p.info['contentDescription']:
+                drag_from_elem = drag_from_elem_p.child(resourceId="com.huawei.android.launcher:id/snapshot")
+
+        drag_to_elem = None
+        drag_to_elem_parent = target_device(resourceId="com.huawei.android.launcher:id/device_background")
+        for drag_to_elem_p in drag_to_elem_parent:
+            device_name = drag_to_elem_p.sibling(resourceId="com.huawei.android.launcher:id/device_name")
+            if target_device in device_name.info['text']:
+                drag_to_elem = drag_to_elem_p.child(resourceId="com.huawei.android.launcher:id/device_animate")
+
+        drag_from_elem_bounds = drag_from_elem.info['bounds']
+        drag_to_elem_bounds = drag_to_elem.info['bounds']
+        left_w = int((drag_from_elem_bounds['left'] + drag_from_elem_bounds['right']) / 2)
+        left_h = int((drag_from_elem_bounds['top'] + drag_from_elem_bounds['bottom']) / 2)
+        right_w = int((drag_to_elem_bounds['left'] + drag_to_elem_bounds['right']) / 2)
+        right_h = int((drag_to_elem_bounds['top'] + drag_to_elem_bounds['bottom']) / 2)
+        source_device.drag(left_w, left_h, right_w, right_h, 2)
         return
     
     def detect_hac(self, test_device, test_app, test_hstg, cflc_device, cflc_app, cflc_hstg):

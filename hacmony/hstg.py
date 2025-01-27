@@ -235,7 +235,7 @@ class HSTG(object):
         window.img_dhash = calculate_dhash(window.img)
         return views, window
 
-    def export_xml(self, xlm_file_path = ''):
+    def export_xml(self, xml_file_path=''):
         service_dict = {}
         # xml_file_path = 'state/test.xml'
 
@@ -291,8 +291,80 @@ class HSTG(object):
             print(key)
     
     def get_PLAYs(self):
-        # return a set of 'events sequence' which is starting from initial state to the state with 'PLAY' status.
-        pass
+        play_set = set()
+        play_states_ids = []
 
-    def import_xml(self, xlm_file_path):
-        pass
+        for state in self.states:
+            for key, value in state.audio_status.items():
+                if value in ['START', 'START*']:
+                    play_states_ids.append(state.id)
+                    break
+        self.state_to_edges = {}
+        for edge in self.edges:
+            if edge.source_state_id not in self.state_to_edges:
+                self.state_to_edges[edge.source_state_id] = []
+            self.state_to_edges[edge.source_state_id].append(edge)
+
+        for play_states_id in play_states_ids:
+            all_edges = []
+            self.dfs_edges(0, play_states_id, [], all_edges)
+            for path in all_edges:
+                event_list = []
+                for edge in path:
+                    events = edge.events
+                    for event in events:
+                        event_list.append(event)
+                play_set.add(tuple(event_list))
+        return play_set
+
+    def dfs_edges(self, current_state_id, target_state_id, path, all_edges):
+        if current_state_id == target_state_id:
+            all_edges.append(path)
+            return
+
+        if current_state_id in self.state_to_edges:
+            for edge in self.state_to_edges[current_state_id]:
+                self.dfs_edges(edge.target_state_id, target_state_id, path + [edge], all_edges)
+
+
+    def import_xml(self, xml_file_path):
+        tree = ET.parse(xml_file_path)
+        root = tree.getroot()
+
+        package_name = root.get('package_name')
+        time = root.get('time')
+        print(f"Package: {package_name}, Time: {time}")
+
+        for state_elem in root.findall('State'):
+            state_id = int(state_elem.get('id'))
+            activity = state_elem.get('activity')
+            state_data = {
+                'id': state_id,
+                'activity': activity,
+                'audio_status': [],
+                'edges': []
+            }
+
+            audio_status_elem = state_elem.find('AudioStatus')
+            for service_elem in audio_status_elem.findall('Service'):
+                audio_name = service_elem.get('audio_name')
+                audio_status = service_elem.get('audio_status')
+                state_data['audio_status'].append({'audio_name': audio_name, 'audio_status': audio_status})
+
+            status_elem = state_elem.find('Status')
+            for edge_elem in status_elem.findall('Edge'):
+                target_state_id = int(edge_elem.get('target_id'))
+                edge_data = {'source_state_id': state_id, 'target_state_id': target_state_id, 'events': []}
+
+                for event_elem in edge_elem.findall('Event'):
+                    event_data = {
+                        'type': event_elem.get('type'),
+                        'x': int(event_elem.get('x')),
+                        'y': int(event_elem.get('y'))
+                    }
+                    edge_data['events'].append(event_data)
+
+                state_data['edges'].append(edge_data)
+                self.edges.append(edge_data)
+
+            self.states.append(state_data)
