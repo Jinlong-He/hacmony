@@ -326,7 +326,6 @@ class HSTG(object):
             for edge in self.state_to_edges[current_state_id]:
                 self.dfs_edges(edge.target_state_id, target_state_id, path + [edge], all_edges)
 
-
     def import_xml(self, xml_file_path):
         tree = ET.parse(xml_file_path)
         root = tree.getroot()
@@ -336,35 +335,28 @@ class HSTG(object):
         print(f"Package: {package_name}, Time: {time}")
 
         for state_elem in root.findall('State'):
-            state_id = int(state_elem.get('id'))
-            activity = state_elem.get('activity')
-            state_data = {
-                'id': state_id,
-                'activity': activity,
-                'audio_status': [],
-                'edges': []
-            }
-
+            state_id = state_elem.get('id')
+            act_name = state_elem.get('activity')
+            audio_status = {}
             audio_status_elem = state_elem.find('AudioStatus')
             for service_elem in audio_status_elem.findall('Service'):
                 audio_name = service_elem.get('audio_name')
-                audio_status = service_elem.get('audio_status')
-                state_data['audio_status'].append({'audio_name': audio_name, 'audio_status': audio_status})
+                audio_statu = service_elem.get('audio_status')
+                audio_status.setdefault(audio_name, audio_statu)
+            state = State(act_name, audio_status, None, None)
+            self.states.append(state)
 
             status_elem = state_elem.find('Status')
             for edge_elem in status_elem.findall('Edge'):
+                events = []
                 target_state_id = int(edge_elem.get('target_id'))
-                edge_data = {'source_state_id': state_id, 'target_state_id': target_state_id, 'events': []}
-
                 for event_elem in edge_elem.findall('Event'):
-                    event_data = {
-                        'type': event_elem.get('type'),
-                        'x': int(event_elem.get('x')),
-                        'y': int(event_elem.get('y'))
-                    }
-                    edge_data['events'].append(event_data)
-
-                state_data['edges'].append(edge_data)
-                self.edges.append(edge_data)
-
-            self.states.append(state_data)
+                    event_type = event_elem.get('type')
+                    if event_type in ['click']:
+                        event_x = int(event_elem.get('x'))
+                        event_y = int(event_elem.get('y'))
+                        event = ClickEvent([event_x, event_y, 0, 0])
+                    self.events.append(event)
+                    events.append(event)
+                edge = Edge(state_id, target_state_id, events)
+                self.edges.append(edge)
